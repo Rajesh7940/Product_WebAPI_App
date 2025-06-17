@@ -69,7 +69,7 @@
     <div id="message"></div>
 
     <script>
-        document.getElementById('productForm').addEventListener('submit', async function(event) {
+        document.getElementById('productForm').addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const messageDiv = document.getElementById('message');
@@ -102,11 +102,9 @@
                 }
             } catch (error) {
                 messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.textContent = 'Error: ' + error.message;
-
-
-
+                messageDiv.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>
