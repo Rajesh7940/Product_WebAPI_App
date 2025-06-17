@@ -33,7 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseStaticFiles(); // Enable serving static files from wwwroot
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();

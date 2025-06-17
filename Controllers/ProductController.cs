@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Product_WebAPI_App.Data;
 using Product_WebAPI_App.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,25 +11,24 @@ namespace Product_WebAPI_App.Controllers
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
-        // Sample in-memory data store for demonstration (replace with database in production)
-        private static readonly List<Product> _products = new List<Product>
+        private readonly ProductDbContext _context;
+        public ProductController(ProductDbContext context)
         {
-            new Product { Id = 1, Name = "Laptop", Price = 999.99, Category = "Electronics" },
-            new Product { Id = 2, Name = "Book", Price = 19.99, Category = "Stationery" }
-        };
+            _context = context;
+        }
 
         // GET: api/Product
         [HttpGet]
         public ActionResult<IEnumerable<Product>> GetProducts()
         {
-            return Ok(_products);
+            return Ok(_context.Products.ToList());
         }
 
         // GET: api/Product/5
         [HttpGet("{id}")]
         public ActionResult<Product> GetProduct(int id)
         {
-            var product = _products.FirstOrDefault(p => p.Id == id);
+            var product = _context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -39,21 +40,44 @@ namespace Product_WebAPI_App.Controllers
         [HttpPost]
         public ActionResult<Product> CreateProduct([FromBody] Product product)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            product.Id = _products.Max(p => p.Id) + 1; // Simple ID generation
-            _products.Add(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+                _context.Products.Add(product);
+                _context.SaveChanges();
+                return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle database-related errors (e.g., unique constraint violations)
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        error = "A database error occurred while creating the product.",
+                        details = ex.InnerException?.Message
+                    });
+            }
+            catch (Exception ex)
+            {
+                // Handle any other unexpected errors
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        error = "An unexpected error occurred.",
+                        details = ex.Message
+                    });
+            }
         }
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
         public ActionResult UpdateProduct(int id, [FromBody] Product updatedProduct)
         {
-            var product = _products.FirstOrDefault(p => p.Id == id);
+            var product = _context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -69,13 +93,13 @@ namespace Product_WebAPI_App.Controllers
         [HttpDelete("{id}")]
         public ActionResult DeleteProduct(int id)
         {
-            var product = _products.FirstOrDefault(p => p.Id == id);
+            var product = _context.Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            _products.Remove(product);
+            _context.Products.Remove(product);
             return NoContent();
         }
     }
