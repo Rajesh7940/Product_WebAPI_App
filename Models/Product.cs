@@ -10,6 +10,8 @@ namespace Product_WebAPI_App.Models
         public double Price { get; set; }
         public string Category { get; set; }
 
+        public DateTime Created_date { get; set; }
+
 
     }
 }
